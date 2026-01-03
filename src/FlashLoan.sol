@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Interface của Aave Pool (Để gọi hàm vay)
 interface IPool {
     function flashLoanSimple(
         address receiverAddress,
@@ -19,8 +18,7 @@ contract FlashLoanBot {
     address payable public owner;
     IPool public POOL;
 
-    // Địa chỉ Aave V3 Pool trên Ethereum Mainnet (Dùng cái này nếu fork mainnet)
-    // Nếu dùng testnet Sepolia thì thay địa chỉ khác
+    // Dia chi Aave V3 Pool tren Ethereum Mainnet
     address constant AAVE_POOL = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2; 
 
     constructor() {
@@ -30,6 +28,9 @@ contract FlashLoanBot {
 
     receive() external payable {}
     
+    function _deposit() public {
+        
+    }
     function withdrawToken(address _token) external {
         require(msg.sender == owner, "Only owner");
         uint256 balance = IERC20(_token).balanceOf(address(this));
