@@ -32,6 +32,8 @@ contract FlashLoanBot {
     address constant AAVE_POOL = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
     address constant UNISWAP_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
+    address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
     constructor() {
         owner = payable(msg.sender);
@@ -65,12 +67,14 @@ contract FlashLoanBot {
     ) external returns (bool) {
         uint256 myBalance = IERC20(asset).balanceOf(address(this));
         require(myBalance >= amount, "Tien chua ve!");
-        console.log("So du sau khi vay:", myBalance/1e6, "USDC");
+        // console.log("So du sau khi vay:", myBalance/1e6, "USDC");
 
         // logic kiem tien
-        address[] memory path = new address[](2); // USDC -> WETH
-        path[0] = asset;
-        path[1] = WETH;
+        address[] memory path = new address[](4);
+        path[0] = USDC; 
+        path[1] = WBTC;
+        path[2] = WETH;
+        path[3] = USDC;
         IERC20(asset).approve(UNISWAP_ROUTER, amount);
         IUniswapV2Router(UNISWAP_ROUTER).swapExactTokensForTokens(
             amount,
@@ -79,31 +83,16 @@ contract FlashLoanBot {
             address(this),
             block.timestamp
         );
-        myBalance = IERC20(asset).balanceOf(address(this));
-        console.log("So du sau khi trade:", myBalance/1e6, "USDC");
-
-        uint wethBalance = IERC20(WETH).balanceOf(address(this));
-        console.log("Luong WETH trade duoc", wethBalance/1e18, "WETH");
-
-        address[] memory pathBack = new address[](2); // WETH -> USDC
-        pathBack[0] = WETH;
-        pathBack[1] = asset;
-        IERC20(WETH).approve(UNISWAP_ROUTER, wethBalance);
-        IUniswapV2Router(UNISWAP_ROUTER).swapExactTokensForTokens(
-            wethBalance,
-            0,
-            pathBack,
-            address(this),
-            block.timestamp
-        );
-
-        myBalance = IERC20(asset).balanceOf(address(this));
-        console.log("So du sau khi trade back:", myBalance/1e6, "USDC");
-
-        wethBalance = IERC20(WETH).balanceOf(address(this));
-        console.log("Luong WETH trade back", wethBalance/1e18, "WETH");
 
         uint256 amountOwed = amount + premium;
+        uint256 finalBalance = IERC20(asset).balanceOf(address(this));
+        
+        console.log("--- KET QUA ARBITRAGE ---");
+        console.log("Vay:", amount);
+        console.log("Tra:", amountOwed);
+        console.log("Thu ve:", finalBalance);
+
+        // tra no
         IERC20(asset).approve(address(POOL), amountOwed);
 
         return true;
